@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Planning Nemaucar</title>
+    <meta name="description" content="Application locale de gestion du planning de location Nemaucar.">
+    <meta name="theme-color" content="#93cfa2">
+    <link rel="icon" href="assets/favicon-nemaucar.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="auth-shell" id="authShell">
+      <section class="auth-card">
+        <img class="auth-logo" src="assets/logo-nemaucar.png" alt="Nemaucar">
+        <p class="eyebrow">Acces securise</p>
+        <h1>Connexion au planning</h1>
+        <p class="auth-copy">Entrez le mot de passe de la societe pour acceder au planning, aux locations et aux vehicules.</p>
+        <form id="loginForm" class="auth-form">
+          <label>Mot de passe<input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="btn primary" id="loginButton" type="submit">Se connecter</button>
+          <p class="form-message" id="loginMessage"></p>
+        </form>
+      </section>
+    </div>
+
+    <div class="loading-shell" id="loadingShell">
+      <div class="loading-card">
+        <img class="auth-logo" src="assets/logo-nemaucar.png" alt="Nemaucar">
+        <p class="eyebrow">Chargement</p>
+        <h1>Preparation du planning</h1>
+      </div>
+    </div>
+
+    <div id="appRoot" class="hidden">
+      <header class="app-header">
+        <div class="brand" aria-label="Nemaucar">
+          <img src="assets/logo-nemaucar.png" alt="Nemaucar">
+        </div>
+        <div class="header-title">
+          <p>Gestion quotidienne</p>
+          <h1>Planning des locations</h1>
+        </div>
+        <div class="header-actions">
+          <span class="save-badge" id="saveBadge">Connecte</span>
+          <button class="btn primary" type="button" id="exportCurrentRentals">Recap locations</button>
+          <button class="btn secondary" type="button" id="exportData">Exporter</button>
+          <label class="btn ghost import-label" for="importData">Importer</label>
+          <button class="btn ghost" type="button" id="logoutButton">Deconnexion</button>
+          <input id="importData" type="file" accept="application/json">
+        </div>
+      </header>
+
+      <main class="app-shell">
+        <aside class="sidebar" aria-label="Navigation application">
+          <button class="nav-item active" type="button" data-view="planning">Planning</button>
+          <button class="nav-item" type="button" data-view="vehicles">Vehicules</button>
+          <button class="nav-item" type="button" data-view="rentals">Locations</button>
+          <button class="nav-item" type="button" data-view="alerts">Alertes</button>
+        </aside>
+
+        <section class="workspace">
+          <div class="toolbar">
+            <div>
+              <p class="eyebrow">Nemaucar</p>
+              <h2 id="viewTitle">Planning</h2>
+            </div>
+          <div class="toolbar-actions">
+            <button class="btn ghost" type="button" id="todayButton">Aujourd'hui</button>
+            <button class="btn ghost" type="button" id="resetFleetButton">Recharger la flotte</button>
+            <button class="btn secondary" type="button" id="addVehicleButton">Ajouter un vehicule</button>
+            <button class="btn primary" type="button" id="addRentalButton">Ajouter une location</button>
+          </div>
+        </div>
+
+          <div class="setup-banner hidden" id="setupBanner">
+            <strong>Configuration initiale</strong>
+            <p>Ajoutez maintenant vos 4 vehicules reels pour remplacer definitivement les donnees de demonstration.</p>
+          </div>
+
+          <section class="summary-grid" aria-label="Resume de la flotte">
+            <article>
+              <span id="availableCount">0</span>
+              <p>Disponibles</p>
+            </article>
+            <article>
+              <span id="reservedCount">0</span>
+              <p>Reserves</p>
+            </article>
+            <article>
+              <span id="rentedCount">0</span>
+              <p>Loues</p>
+            </article>
+            <article>
+              <span id="alertCount">0</span>
+              <p>Alertes</p>
+            </article>
+          </section>
+
+          <section class="view active" id="planningView">
+            <div class="planning-controls">
+              <div class="segmented" aria-label="Type de calendrier">
+                <button class="active" type="button" data-calendar-mode="week">Semaine</button>
+                <button type="button" data-calendar-mode="month">Mois</button>
+              </div>
+              <div class="date-switcher">
+                <button class="icon-button" type="button" id="previousPeriod" aria-label="Periode precedente">&lsaquo;</button>
+                <strong id="periodLabel"></strong>
+                <button class="icon-button" type="button" id="nextPeriod" aria-label="Periode suivante">&rsaquo;</button>
+              </div>
+            </div>
+            <div class="legend" id="statusLegend"></div>
+            <div class="calendar-wrap" id="calendar"></div>
+          </section>
+
+          <section class="view" id="vehiclesView">
+            <div class="list-grid" id="vehicleList"></div>
+          </section>
+
+          <section class="view" id="rentalsView">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Client</th>
+                    <th>Vehicule</th>
+                    <th>Dates</th>
+                    <th>Tarif</th>
+                    <th>Paiement</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="rentalTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="view" id="alertsView">
+            <div class="alert-list" id="alertList"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="modal" id="vehicleModal">
+      <form method="dialog" id="vehicleForm" class="modal-panel">
+        <div class="modal-head">
+          <h3 id="vehicleModalTitle">Vehicule</h3>
+          <button class="icon-button" value="cancel" type="submit" aria-label="Fermer">&times;</button>
+        </div>
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <label>Immatriculation<input name="plate" required></label>
+          <label>Marque / modele<input name="model" required></label>
+          <label>Kilometrage<input name="mileage" type="number" min="0" required></label>
+          <label>Statut actuel<select name="status" required></select></label>
+          <label>Date du prochain entretien<input name="nextServiceDate" type="date" required></label>
+          <label class="full">Notes<textarea name="notes" rows="4"></textarea></label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" value="cancel" type="submit">Annuler</button>
+          <button class="btn primary" id="saveVehicle" value="default" type="button">Enregistrer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="rentalModal">
+      <form method="dialog" id="rentalForm" class="modal-panel">
+        <div class="modal-head">
+          <h3 id="rentalModalTitle">Location</h3>
+          <button class="icon-button" value="cancel" type="submit" aria-label="Fermer">&times;</button>
+        </div>
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <label>Nom du client<input name="customerName" required></label>
+          <label>Telephone<input name="phone" required></label>
+          <label>Email<input name="email" type="email" required></label>
+          <label>Vehicule loue<select name="vehicleId" required></select></label>
+          <label>Date de debut<input name="startDate" type="date" required></label>
+          <label>Date de fin prevue<input name="endDate" type="date" required></label>
+          <label>Tarif mensuel ou duree<input name="rate" required></label>
+          <label>Caution versee<select name="depositPaid"><option value="true">Oui</option><option value="false">Non</option></select></label>
+          <label>Documents recus<select name="documentsReceived"><option value="true">Oui</option><option value="false">Non</option></select></label>
+          <label>Statut paiement<select name="paymentStatus"><option>A jour</option><option>En attente</option><option>En retard</option></select></label>
+          <label>Statut location<select name="status" required></select></label>
+          <label class="full">Commentaires<textarea name="comments" rows="4"></textarea></label>
+        </div>
+        <div class="modal-actions danger-row">
+          <button class="btn danger hidden" id="deleteRental" type="button">Supprimer</button>
+          <span></span>
+          <button class="btn ghost" value="cancel" type="submit">Annuler</button>
+          <button class="btn primary" id="saveRental" value="default" type="button">Enregistrer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "planning-nemaucar",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Planning de location Nemaucar pour Netlify",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
