@@ -955,8 +955,8 @@ async function init() {
     setSaveState("idle", "Connecte");
     setBodyState("app");
     render();
-  } catch {
-    elements.loginMessage.textContent = "Impossible de joindre le service securise. Verifiez le deploiement Netlify.";
+    } catch {
+    elements.loginMessage.textContent = "";
     setBodyState("auth");
   }
 }
