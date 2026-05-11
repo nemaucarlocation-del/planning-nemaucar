@@ -20,7 +20,8 @@ exports.handler = async (event) => {
     const store = getStore("nemaucar-planning");
     await store.setJSON("app-data", data);
     return json(200, { saved: true });
-  } catch {
-    return json(500, { error: "Impossible de sauvegarder les donnees." });
+   } catch (error) {
+    console.error("data-write error", error);
+    return json(500, { error: error?.message || "Impossible de sauvegarder les donnees." });
   }
 };
