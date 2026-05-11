@@ -6,18 +6,10 @@ function getConfiguredStore() {
   const token = process.env.NEMAUCAR_BLOBS_TOKEN;
 
   if (siteID && token) {
-    return getStore({
-      name: "nemaucar-planning",
-      siteID,
-      token,
-      consistency: "strong",
-    });
+    return getStore("nemaucar-planning", { siteID, token });
   }
 
-  return getStore({
-    name: "nemaucar-planning",
-    consistency: "strong",
-  });
+  return getStore("nemaucar-planning");
 }
 
 exports.handler = async (event) => {
