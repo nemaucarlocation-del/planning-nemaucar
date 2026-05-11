@@ -5,11 +5,16 @@ function getConfiguredStore() {
   const siteID = process.env.NEMAUCAR_BLOBS_SITE_ID || process.env.NETLIFY_SITE_ID;
   const token = process.env.NEMAUCAR_BLOBS_TOKEN;
 
-  if (siteID && token) {
-    return getStore("nemaucar-planning", { siteID, token });
+  if (!siteID || !token) {
+    throw new Error("Variables Netlify Blobs manquantes.");
   }
 
-  return getStore("nemaucar-planning");
+  return getStore({
+    name: "nemaucar-planning",
+    siteID,
+    token,
+    consistency: "strong",
+  });
 }
 
 exports.handler = async (event) => {
