@@ -306,6 +306,12 @@ function loadLocalData() {
   return false;
 }
 
+function enableLocalFallback(message = "Mode local de secours") {
+  state.storageMode = "local";
+  saveLocalData();
+  setSaveState("idle", message);
+}
+
 async function apiRequest(endpoint, options = {}) {
   const response = await fetch(`${apiBase}/${endpoint}`, {
     credentials: "include",
@@ -383,7 +389,7 @@ async function loadAppData() {
   } catch (error) {
     if (error.status === 500) {
       normalizeStateData(seedData);
-      await persistData();
+      enableLocalFallback("Mode local de secours");
       return;
     }
     throw error;
@@ -400,12 +406,20 @@ async function persistData() {
     return;
   }
 
-  setSaveState("saving", "Sauvegarde...");
-  await apiRequest("data-write", {
-    method: "POST",
-    body: JSON.stringify({ data: state.data }),
-  });
-  setSaveState("idle", "Sauvegarde OK");
+  try {
+    setSaveState("saving", "Sauvegarde...");
+    await apiRequest("data-write", {
+      method: "POST",
+      body: JSON.stringify({ data: state.data }),
+    });
+    setSaveState("idle", "Sauvegarde OK");
+  } catch (error) {
+    if (error.status === 500) {
+      enableLocalFallback("Sauvegarde locale");
+      return;
+    }
+    throw error;
+  }
 }
 
 function buildAlerts() {
@@ -955,7 +969,7 @@ async function init() {
     setSaveState("idle", "Connecte");
     setBodyState("app");
     render();
-    } catch {
+  } catch {
     elements.loginMessage.textContent = "";
     setBodyState("auth");
   }
