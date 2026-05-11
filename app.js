@@ -377,8 +377,17 @@ async function loadAppData() {
     return;
   }
 
-  const payload = await apiRequest("data-read");
-  normalizeStateData(payload?.data || seedData);
+  try {
+    const payload = await apiRequest("data-read");
+    normalizeStateData(payload?.data || seedData);
+  } catch (error) {
+    if (error.status === 500) {
+      normalizeStateData(seedData);
+      await persistData();
+      return;
+    }
+    throw error;
+  }
 }
 
 async function persistData() {
@@ -852,6 +861,7 @@ function bindEvents() {
       setBodyState("app");
       render();
     } catch (error) {
+      setBodyState("auth");
       elements.loginMessage.textContent = error.message || "Connexion impossible.";
     } finally {
       elements.loginButton.disabled = false;
