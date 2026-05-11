@@ -255,8 +255,12 @@ function syncVehicleStatuses() {
       .filter((rental) => rental.vehicleId === vehicle.id)
       .sort((a, b) => parseDate(a.startDate) - parseDate(b.startDate));
 
-    const activeRental = linkedRentals.find((rental) => ["late", "rented"].includes(rental.status) && parseDate(rental.endDate) >= new Date());
-    const futureReservation = linkedRentals.find((rental) => rental.status === "reserved" && parseDate(rental.endDate) >= new Date());
+    const activeRental = linkedRentals.find(
+      (rental) => ["late", "rented"].includes(rental.status) && parseDate(rental.endDate) >= new Date()
+    );
+    const futureReservation = linkedRentals.find(
+      (rental) => rental.status === "reserved" && parseDate(rental.endDate) >= new Date()
+    );
 
     if (activeRental) {
       vehicle.status = activeRental.status;
@@ -431,21 +435,48 @@ function buildAlerts() {
   state.data.rentals.forEach((rental) => {
     const end = parseDate(rental.endDate);
     if (rental.paymentStatus === "En retard") {
-      alerts.push({ type: "Paiement", text: `${rental.customerName} a un paiement en retard.`, tone: "status-late", rentalId: rental.id });
+      alerts.push({
+        type: "Paiement",
+        text: `${rental.customerName} a un paiement en retard.`,
+        tone: "status-late",
+        rentalId: rental.id,
+      });
     }
     if (rental.endDate === todayInput) {
-      alerts.push({ type: "Retour", text: `${rental.customerName} doit rendre ${vehicleName(rental.vehicleId)} aujourd'hui.`, tone: "status-reserved", rentalId: rental.id });
+      alerts.push({
+        type: "Retour",
+        text: `${rental.customerName} doit rendre ${vehicleName(rental.vehicleId)} aujourd'hui.`,
+        tone: "status-reserved",
+        rentalId: rental.id,
+      });
     } else if (end > today && end <= soonLimit) {
-      alerts.push({ type: "Bientot", text: `La location de ${rental.customerName} se termine le ${formatDate(rental.endDate)}.`, tone: "status-reserved", rentalId: rental.id });
+      alerts.push({
+        type: "Bientot",
+        text: `La location de ${rental.customerName} se termine le ${formatDate(rental.endDate)}.`,
+        tone: "status-reserved",
+        rentalId: rental.id,
+      });
     }
     if (rental.status === "late") {
-      alerts.push({ type: "Retard", text: `${rental.customerName} est signale en retard.`, tone: "status-late", rentalId: rental.id });
+      alerts.push({
+        type: "Retard",
+        text: `${rental.customerName} est signale en retard.`,
+        tone: "status-late",
+        rentalId: rental.id,
+      });
     }
   });
 
   state.data.vehicles
     .filter((vehicle) => vehicle.status === "service")
-    .forEach((vehicle) => alerts.push({ type: "Atelier", text: `${vehicleName(vehicle.id)} est en entretien.`, tone: "status-service", vehicleId: vehicle.id }));
+    .forEach((vehicle) =>
+      alerts.push({
+        type: "Atelier",
+        text: `${vehicleName(vehicle.id)} est en entretien.`,
+        tone: "status-service",
+        vehicleId: vehicle.id,
+      })
+    );
 
   return alerts;
 }
@@ -474,7 +505,7 @@ function renderSummary() {
   document.querySelector("#reservedCount").textContent = counts.reserved || 0;
   document.querySelector("#rentedCount").textContent = counts.rented || 0;
   document.querySelector("#alertCount").textContent = buildAlerts().length;
-  elements.setupBanner.classList.toggle("hidden", state.data.vehicles.some((vehicle) => vehicle.plate || vehicle.model));
+  elements.setupBanner.classList.toggle("hidden", state.data.vehicles.length > 0);
 }
 
 function renderLegend() {
@@ -494,19 +525,30 @@ function renderCalendar() {
   const last = days[days.length - 1];
   elements.periodLabel.textContent =
     state.calendarMode === "week"
-      ? `${formatDate(first, { day: "numeric", month: "long" })} - ${formatDate(last, { day: "numeric", month: "long", year: "numeric" })}`
+      ? `${formatDate(first, { day: "numeric", month: "long" })} - ${formatDate(last, {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}`
       : formatDate(first, { month: "long", year: "numeric" });
 
   const head = [
     `<div class="calendar-head">Vehicule</div>`,
-    ...days.map((day) => `<div class="calendar-head"><strong>${formatDate(day, { weekday: "short" })}</strong><span>${formatDate(day, { day: "2-digit", month: "2-digit" })}</span></div>`),
+    ...days.map(
+      (day) =>
+        `<div class="calendar-head"><strong>${formatDate(day, {
+          weekday: "short",
+        })}</strong><span>${formatDate(day, { day: "2-digit", month: "2-digit" })}</span></div>`
+    ),
   ].join("");
 
   const rows = state.data.vehicles
     .map((vehicle) => {
       const cells = days
         .map((day) => {
-          const rentals = state.data.rentals.filter((rental) => rental.vehicleId === vehicle.id && rentalTouchesDay(rental, day));
+          const rentals = state.data.rentals.filter(
+            (rental) => rental.vehicleId === vehicle.id && rentalTouchesDay(rental, day)
+          );
           const bookings = rentals
             .map(
               (rental) => `
@@ -614,7 +656,9 @@ function fillSelects() {
   const vehicleOptions = state.data.vehicles
     .map((vehicle) => `<option value="${vehicle.id}">${escapeHtml(vehicleName(vehicle.id))}</option>`)
     .join("");
-  const statusOptions = Object.entries(statuses).map(([key, value]) => `<option value="${key}">${value.label}</option>`).join("");
+  const statusOptions = Object.entries(statuses)
+    .map(([key, value]) => `<option value="${key}">${value.label}</option>`)
+    .join("");
   const rentalStatusOptions = Object.entries(statuses)
     .filter(([key]) => key !== "available" && key !== "service")
     .map(([key, value]) => `<option value="${key}">${value.label}</option>`)
